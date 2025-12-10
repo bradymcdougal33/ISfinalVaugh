@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Geometry Dash Clone</title>
+<style>
+    body {
+        margin: 0;
+        font-family: Arial, Helvetica, sans-serif;
+        overflow: hidden;
+        background: linear-gradient(#1e1e1e, #333);
+    }
+    nav {
+        background-color: #ffb612; /* Packers gold */
+        padding: 10px;
+        text-align: center;
+        z-index: 10;
+        position: relative;
+    }
+    nav a {
+        color: #00471b;
+        font-weight: bold;
+        margin: 0 10px;
+        text-decoration: none;
+    }
+    #gameContainer {
+        position: relative;
+        margin: 0 auto;
+        width: 800px;
+        height: 400px;
+        overflow: hidden;
+        border: 4px solid #00471b;
+        background-color: #222;
+        border-radius: 10px;
+    }
+    .player {
+        position: absolute;
+        width: 40px;
+        height: 40px;
+        background-color: #ffb612;
+        bottom: 0;
+        left: 100px;
+        border-radius: 5px;
+    }
+    .spike {
+        position: absolute;
+        width: 20px;
+        height: 20px;
+        background-color: red;
+        clip-path: polygon(50% 0%, 0% 100%, 100% 100%);
+        bottom: 0;
+    }
+    #ground {
+        position: absolute;
+        width: 2000px;
+        height: 20px;
+        bottom: 0;
+        left: 0;
+        background-color: #888;
+    }
+    #score {
+        font-size: 24px;
+        text-align: center;
+        color: #fff;
+        margin: 10px 0;
+    }
+</style>
+</head>
+<body>
+<nav>
+    <a href="index.html">Home</a> |
+    <a href="resume.html">Resume</a> |
+    <a href="packers.html">Packers Fan Page</a>
+</nav>
+
+<h1 style="text-align:center; color:#ffb612;">Geometry Dash Clone</h1>
+<p style="text-align:center; color:white;">Press SPACE or UP arrow to jump!</p>
+
+<div id="gameContainer">
+    <div id="ground"></div>
+    <div class="player" id="player"></div>
+</div>
+
+<div id="score">Score: 0</div>
+
+<script>
+const container = document.getElementById('gameContainer');
+const player = document.getElementById('player');
+const ground = document.getElementById('ground');
+let playerBottom = 0;
+let velocity = 0;
+let gravity = 1.2;
+let jumpForce = 18;
+let gameSpeed = 6;
+let obstacles = [];
+let score = 0;
+let gameOver = false;
+
+// Jump control
+document.addEventListener('keydown', (e) => {
+    if((e.code === "Space" || e.code === "ArrowUp") && playerBottom === 0 && !gameOver){
+        velocity = jumpForce;
+    }
+});
+
+// Game loop
+function gameLoop(){
+    if(gameOver) return;
+
+    // Player physics
+    velocity -= gravity;
+    playerBottom += velocity;
+    if(playerBottom < 0){
+        playerBottom = 0;
+        velocity = 0;
+    }
+    player.style.bottom = playerBottom + 'px';
+
+    // Move obstacles
+    obstacles.forEach((obs, index) => {
+        obs.x -= gameSpeed;
+        obs.element.style.left = obs.x + 'px';
+
+        // Collision
+        if(obs.x < player.offsetLeft + player.offsetWidth &&
+           obs.x + obs.width > player.offsetLeft &&
+           playerBottom < obs.height){
+            gameOver = true;
+            alert("Game Over! Score: " + score);
+            location.reload();
+        }
+
+        // Remove off-screen
+        if(obs.x + obs.width < 0){
+            container.removeChild(obs.element);
+            obstacles.splice(index, 1);
+            score++;
+            document.getElementById('score').innerText = "Score: " + score;
+        }
+    });
+
+    // Generate new spikes
+    if(obstacles.length === 0 || obstacles[obstacles.length-1].x < 500){
+        createSpike();
+    }
+
+    requestAnimationFrame(gameLoop);
+}
+
+// Create spikes
+function createSpike(){
+    const spike = document.createElement('div');
+    spike.classList.add('spike');
+    const height = 40 + Math.random()*20; // spike height variation
+    spike.style.height = height + "px";
+    spike.style.bottom = "0px";
+    spike.style.left = "800px";
+    container.appendChild(spike);
+    obstacles.push({element: spike, x:800, width: 20, height: height});
+}
+
+// Start the game
+gameLoop();
+</script>
+</body>
+</html>
